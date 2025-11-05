@@ -55,7 +55,6 @@ async function loadAndRender() {
   try {
     const todos = await fetchTodos({ ownerEmail: user.email });
     const todosArray = Array.isArray(todos) ? todos : [];
-    // Lọc theo chủ sở hữu (nếu API trả về dữ liệu dùng chung)
     const filtered = todosArray.filter((t) => {
       const ownerId =
         t.ownerId ||
@@ -141,9 +140,7 @@ function attachListEvents() {
       };
       try {
         await updateTodo(id, payload);
-        // cập nhật local cache
         todo.isCompleted = e.target.checked;
-        // Lưu lại vào localStorage
         if (user && user.id) {
           saveTodosForUser(user.id, todosCache);
         }
@@ -162,7 +159,6 @@ function attachListEvents() {
       try {
         await deleteTodo(id);
         todosCache = todosCache.filter((t) => (t._id || t.id) !== id);
-        // Lưu lại vào localStorage
         if (user && user.id) {
           saveTodosForUser(user.id, todosCache);
         }
@@ -179,7 +175,6 @@ function attachListEvents() {
       const id = e.target.dataset.id;
       const todo = todosCache.find((t) => (t._id || t.id) === id);
       if (!todo) return;
-      // fill form with todo để sửa (đơn giản: đặt name, dueDate, priority, set attribute data-edit-id)
       todoForm.name.value = todo.name || "";
       todoForm.dueDate.value = todo.dueDate ? todo.dueDate.split("T")[0] : "";
       todoForm.priority.value = todo.priority ?? "1";
@@ -190,7 +185,6 @@ function attachListEvents() {
   });
 }
 
-// simple escape
 function escapeHtml(s) {
   return String(s).replace(
     /[&<>"']/g,
@@ -240,7 +234,6 @@ todoForm.addEventListener("submit", async (e) => {
     return;
   }
 
-  // create
   const payload = {
     name,
     description: "",
@@ -251,13 +244,11 @@ todoForm.addEventListener("submit", async (e) => {
   };
   try {
     const created = await createTodo(payload);
-    // nếu API trả về created item trong data hoặc không, an toàn thì reload
     await loadAndRender();
     resetForm();
   } catch (err) {
     alert("Tạo todo thất bại");
     console.error(err);
-    // Nếu API lỗi, vẫn thử reload từ localStorage
     await loadAndRender();
   }
 });
@@ -268,7 +259,6 @@ function resetForm() {
   todoForm.querySelector("button[type='submit']").textContent = "Thêm";
 }
 
-// filters
 hideCompleted.onchange = renderList;
 sortByEl.onchange = renderList;
 
