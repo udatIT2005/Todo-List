@@ -12,6 +12,24 @@ form.addEventListener("submit", async (e) => {
   const email = fd.get("email");
   const password = fd.get("password");
 
+  // simple validations
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(String(email).trim())) {
+    alert("Email không hợp lệ");
+    return;
+  }
+  if (!password || String(password).length < 6) {
+    alert("Mật khẩu phải từ 6 ký tự trở lên");
+    return;
+  }
+
+  const submitBtn = form.querySelector("button[type='submit']");
+  const originalText = submitBtn?.textContent;
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Đang đăng nhập...";
+  }
+
   try {
     const data = await loginUser({ email, password });
     // Normalize shape
@@ -27,5 +45,10 @@ form.addEventListener("submit", async (e) => {
   } catch (err) {
     alert(err?.message || "Sai email hoặc mật khẩu");
     console.error(err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || "Đăng nhập";
+    }
   }
 });
