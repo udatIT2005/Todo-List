@@ -21,14 +21,60 @@ logoutBtn.addEventListener("click", () => {
 
 let todosCache = [];
 
+// Lấy todos từ localStorage theo userId
+function getTodosForUser(userId) {
+  const key = `todos_${userId}`;
+  return storage.get(key) || [];
+}
+
+// Lưu todos vào localStorage theo userId
+function saveTodosForUser(userId, todos) {
+  const key = `todos_${userId}`;
+  storage.set(key, todos);
+}
+
 async function loadAndRender() {
+  if (!user || !user.id) {
+    todosCache = [];
+    renderList();
+    return;
+  }
+
+  // Ưu tiên load từ localStorage của user hiện tại
+  const localTodos = getTodosForUser(user.id);
+  const hasLocalTodos = Array.isArray(localTodos) && localTodos.length > 0;
+
+  if (hasLocalTodos) {
+    todosCache = localTodos;
+    renderList();
+  } else {
+    todosCache = [];
+    renderList();
+  }
+
   try {
-    const todos = await fetchTodos();
-    todosCache = Array.isArray(todos) ? todos : [];
+    const todos = await fetchTodos({ ownerEmail: user.email });
+    const todosArray = Array.isArray(todos) ? todos : [];
+    // Lọc theo chủ sở hữu (nếu API trả về dữ liệu dùng chung)
+    const filtered = todosArray.filter((t) => {
+      const ownerId =
+        t.ownerId ||
+        t.userId ||
+        t.user_id ||
+        t.createdById ||
+        t.owner ||
+        t.user?.id ||
+        t.user?._id;
+      const ownerEmail = t.ownerEmail || t.email || t.user?.email;
+      return ownerId === user.id || ownerEmail === user.email;
+    });
+
+    // Cập nhật localStorage và hiển thị
+    saveTodosForUser(user.id, filtered);
+    todosCache = filtered;
     renderList();
   } catch (err) {
     console.error(err);
-    alert("Không thể lấy todo từ server: " + (err.message || err));
   }
 }
 
@@ -87,11 +133,20 @@ function attachListEvents() {
       const id = li.dataset.id;
       const todo = todosCache.find((t) => (t._id || t.id) === id);
       if (!todo) return;
-      const payload = { ...todo, isCompleted: e.target.checked };
+      const payload = {
+        ...todo,
+        isCompleted: e.target.checked,
+        ownerId: user?.id,
+        ownerEmail: user?.email,
+      };
       try {
         await updateTodo(id, payload);
         // cập nhật local cache
         todo.isCompleted = e.target.checked;
+        // Lưu lại vào localStorage
+        if (user && user.id) {
+          saveTodosForUser(user.id, todosCache);
+        }
         renderList();
       } catch (err) {
         alert("Cập nhật thất bại");
@@ -107,6 +162,10 @@ function attachListEvents() {
       try {
         await deleteTodo(id);
         todosCache = todosCache.filter((t) => (t._id || t.id) !== id);
+        // Lưu lại vào localStorage
+        if (user && user.id) {
+          saveTodosForUser(user.id, todosCache);
+        }
         renderList();
       } catch (err) {
         alert("Xóa thất bại");
@@ -154,7 +213,14 @@ todoForm.addEventListener("submit", async (e) => {
     // update
     const todo = todosCache.find((t) => (t._id || t.id) === editId);
     if (!todo) return alert("Không tìm thấy todo để cập nhật");
-    const payload = { ...todo, name, dueDate, priority };
+    const payload = {
+      ...todo,
+      name,
+      dueDate,
+      priority,
+      ownerId: user?.id,
+      ownerEmail: user?.email,
+    };
     try {
       await updateTodo(editId, payload);
       // reload list
@@ -163,12 +229,26 @@ todoForm.addEventListener("submit", async (e) => {
     } catch (err) {
       alert("Cập nhật thất bại");
       console.error(err);
+      // Cập nhật local cache nếu API lỗi
+      const todo = todosCache.find((t) => (t._id || t.id) === editId);
+      if (todo && user && user.id) {
+        Object.assign(todo, payload);
+        saveTodosForUser(user.id, todosCache);
+        renderList();
+      }
     }
     return;
   }
 
   // create
-  const payload = { name, description: "", priority, dueDate };
+  const payload = {
+    name,
+    description: "",
+    priority,
+    dueDate,
+    ownerId: user?.id,
+    ownerEmail: user?.email,
+  };
   try {
     const created = await createTodo(payload);
     // nếu API trả về created item trong data hoặc không, an toàn thì reload
@@ -177,6 +257,8 @@ todoForm.addEventListener("submit", async (e) => {
   } catch (err) {
     alert("Tạo todo thất bại");
     console.error(err);
+    // Nếu API lỗi, vẫn thử reload từ localStorage
+    await loadAndRender();
   }
 });
 

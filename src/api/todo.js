@@ -1,4 +1,5 @@
-const BASE = "https://api-class-o1lo.onrender.com/api/v1/todos";
+import { tenantBase } from "../utils/config.js";
+const BASE = `${tenantBase()}/todos`;
 
 async function safeJson(res) {
   try {
@@ -8,8 +9,10 @@ async function safeJson(res) {
   }
 }
 
-export async function fetchTodos() {
-  const res = await fetch(BASE);
+export async function fetchTodos(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const url = query ? `${BASE}?${query}` : BASE;
+  const res = await fetch(url);
   const j = await safeJson(res);
   if (!res.ok) throw new Error(j?.message || "Lỗi lấy todo");
   // API trả { success, message, data: [...] }
