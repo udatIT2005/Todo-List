@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Todo App</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="icon" href="./src/images/Logo.png" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-wrapper">
+        <h1>Todo List</h1>
+        <div class="header-actions">
+          <span id="userLabel"></span>
+          <button id="logoutBtn" class="btn">Đăng xuất</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="todo-panel">
+        <form id="todoForm" class="todo-form">
+          <input
+            name="name"
+            id="name"
+            type="text"
+            placeholder="Mô tả công việc..."
+            required
+          />
+          <input name="dueDate" id="dueDate" type="date" />
+          <select name="priority" id="priority">
+            <option value="1">Ưu tiên 1</option>
+            <option value="2">Ưu tiên 2</option>
+            <option value="3">Ưu tiên 3</option>
+          </select>
+          <button type="submit" class="btn">Thêm</button>
+        </form>
+
+        <div class="filters">
+          <label
+            ><input type="checkbox" id="hideCompleted" /> Ẩn hoàn thành</label
+          >
+          <label>
+            Sắp xếp:
+            <select id="sortBy">
+              <option value="dueDate">Hạn</option>
+              <option value="priority">Ưu tiên</option>
+              <option value="createdAt">Ngày tạo</option>
+            </select>
+          </label>
+        </div>
+
+        <ul id="todoList" class="todo-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

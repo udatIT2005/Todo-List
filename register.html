@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Đăng ký</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="auth-container">
+      <h2>Đăng ký</h2>
+      <form id="registerForm" class="auth-form">
+        <input name="name" type="text" placeholder="Tên" required />
+        <input name="email" type="email" placeholder="Email" required />
+        <input
+          name="password"
+          type="password"
+          placeholder="Mật khẩu"
+          required
+        />
+        <button type="submit" class="btn">Tạo tài khoản</button>
+      </form>
+      <p>Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+    </main>
+
+    <script type="module" src="./src/auth/register.js"></script>
+  </body>
+</html>
